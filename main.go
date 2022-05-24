@@ -6,9 +6,14 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 )
+
+func getED() {
+
+}
 
 func main() {
 	watcher, err := fsnotify.NewWatcher()
@@ -18,6 +23,10 @@ func main() {
 	}
 
 	done := make(chan bool)
+	tick := time.Tick(10 * time.Second)
+	<-tick
+
+	ext_daterange := `#EXT-X-DATERANGE:ID="999",START-DATE="2018-08-22T21:54:00.079Z",PLANNED-DURATION=30.000, SCTE35-OUT=0xFC302500000000000000FFF01405000003E77FEFFE0011FB9EFE002932E00001010100004D192A59`
 
 	// Process events
 	go func() {
@@ -31,9 +40,7 @@ func main() {
 			select {
 			case ev := <-watcher.Events:
 				fmt.Println("\033[33m", ev, "event", "\033[0m")
-				// if ev.Op&fsnotify.Write == fsnotify.Write {
 				if ev.Op&fsnotify.Create == fsnotify.Create {
-					// fi, _ := os.Open("stream.m3u8")
 					b, _ := ioutil.ReadFile("stream.m3u8")
 					if stream == "" {
 						stream = string(b)
@@ -43,30 +50,16 @@ func main() {
 					} else {
 						newS := strings.Replace(string(b), stream, "", -1)
 						stream = string(b)
-						fmt.Println(newS)
 						fo.Write([]byte(newS))
 					}
-					// for {
-					// 	// read a chunk
-					// 	fmt.Println("hllo")
-					// 	n, err := fi.Read(buf)
-					// 	if err != nil && err != io.EOF {
-					// 		panic(err)
-					// 	}
-					// 	if n == 0 {
-					// 		break
-					// 	}
-
-					// 	// write a chunk
-					// 	if _, err := fo.Write(buf[:n]); err != nil {
-					// 		panic(err)
-					// 	}
-					// }
-					// fi.Close()
 				}
 			case err := <-watcher.Errors:
 				panic(err)
+			case <-tick:
+				fo.WriteString(ext_daterange + "\n")
+				fmt.Println("yo")
 			}
+
 		}
 	}()
 
