@@ -3,22 +3,14 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"strings"
 	"time"
-
-	"github.com/fsnotify/fsnotify"
 )
 
 func main() {
 	input_file := os.Args[1]
 	output_file := os.Args[2]
-	watcher, err := fsnotify.NewWatcher()
-	err = watcher.Add(input_file)
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	done := make(chan bool)
 	tick := time.Tick(10 * time.Second)
@@ -33,40 +25,29 @@ func main() {
 			panic(err)
 		}
 		stream := ""
-		// buf := make([]byte, 1024)
 		for {
 			select {
-			case ev := <-watcher.Events:
-				fmt.Println("\033[33m", ev, "event", "\033[0m")
-				if ev.Op&fsnotify.Create == fsnotify.Create {
-					b, _ := ioutil.ReadFile(input_file)
-					if stream == "" {
-						stream = string(b)
-						if _, err := fo.Write(b); err != nil {
-							panic(err)
-						}
-					} else {
+			case <-tick:
+				fo.WriteString(ext_daterange + "\n")
+			default:
+				b, _ := ioutil.ReadFile(input_file)
+				if stream == "" {
+					stream = string(b)
+					if _, err := fo.Write(b); err != nil {
+						panic(err)
+					}
+				} else {
+					if stream != string(b) {
 						newS := strings.Replace(string(b), stream, "", -1)
 						stream = string(b)
 						fo.Write([]byte(newS))
 					}
 				}
-			case err := <-watcher.Errors:
-				panic(err)
-			case <-tick:
-				fo.WriteString(ext_daterange + "\n")
 			}
-
 		}
 	}()
 
 	// Hang so program doesn't exit
 	<-done
-
 	fmt.Println("closed")
-	/* ... do stuff ... */
-	err = watcher.Close()
-	if err != nil {
-		panic(err)
-	}
 }
