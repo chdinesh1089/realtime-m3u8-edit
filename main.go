@@ -11,13 +11,11 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-func getED() {
-
-}
-
 func main() {
+	input_file := os.Args[1]
+	output_file := os.Args[2]
 	watcher, err := fsnotify.NewWatcher()
-	err = watcher.Add("stream.m3u8")
+	err = watcher.Add(input_file)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -30,7 +28,7 @@ func main() {
 
 	// Process events
 	go func() {
-		fo, err := os.Create("streamout.m3u8")
+		fo, err := os.Create(output_file)
 		if err != nil {
 			panic(err)
 		}
@@ -41,7 +39,7 @@ func main() {
 			case ev := <-watcher.Events:
 				fmt.Println("\033[33m", ev, "event", "\033[0m")
 				if ev.Op&fsnotify.Create == fsnotify.Create {
-					b, _ := ioutil.ReadFile("stream.m3u8")
+					b, _ := ioutil.ReadFile(input_file)
 					if stream == "" {
 						stream = string(b)
 						if _, err := fo.Write(b); err != nil {
@@ -57,7 +55,6 @@ func main() {
 				panic(err)
 			case <-tick:
 				fo.WriteString(ext_daterange + "\n")
-				fmt.Println("yo")
 			}
 
 		}
