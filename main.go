@@ -4,12 +4,16 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
 
+var x = 1
+
 func getext_daterange() string {
-	return `#EXT-X-DATERANGE:ID="999",START-DATE="` + time.Now().Format(time.RFC3339) + `",PLANNED-DURATION=30.000, SCTE35-OUT=0xFC302500000000000000FFF01405000003E77FEFFE0011FB9EFE002932E00001010100004D192A59`
+	x += 1
+	return `#EXT-X-DATERANGE:ID="` + strconv.Itoa(x) + `",START-DATE="` + time.Now().Format("2006-01-02T15:04:05.000Z") + `",PLANNED-DURATION=30.000, SCTE35-OUT=0xFC302500000000000000FFF01405000003E77FEFFE0011FB9EFE002932E00001010100004D192A59`
 }
 
 func main() {
